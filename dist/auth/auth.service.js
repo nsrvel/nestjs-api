@@ -13,7 +13,7 @@ exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
 const argon = require("argon2");
-const runtime_1 = require("@prisma/client/runtime");
+const client_1 = require("@prisma/client");
 let AuthService = exports.AuthService = class AuthService {
     constructor(prisma) {
         this.prisma = prisma;
@@ -31,8 +31,7 @@ let AuthService = exports.AuthService = class AuthService {
             return user;
         }
         catch (error) {
-            if (error instanceof runtime_1.PrismaClientKnownRequestError) {
-                console.log('hahahah');
+            if (error instanceof client_1.Prisma.PrismaClientKnownRequestError) {
                 if (error.code === 'P2002') {
                     throw new common_1.ForbiddenException('Credentials taken');
                 }
@@ -40,8 +39,21 @@ let AuthService = exports.AuthService = class AuthService {
             throw error;
         }
     }
-    async signin() {
-        return 'I am signed in ';
+    async signin(dto) {
+        const user = await this.prisma.user.findUnique({
+            where: {
+                email: dto.email,
+            },
+        });
+        if (!user) {
+            throw new common_1.ForbiddenException('Credentials incorrect');
+        }
+        const pwMatches = await argon.verify(user.hash, dto.password);
+        if (!pwMatches) {
+            throw new common_1.ForbiddenException('Credentials incorrect');
+        }
+        delete user.hash;
+        return user;
     }
 };
 exports.AuthService = AuthService = __decorate([

@@ -17,7 +17,7 @@ let PrismaService = exports.PrismaService = class PrismaService extends client_1
         super({
             datasources: {
                 db: {
-                    url: 'postgresql://root:secret@localhost:5432/project2',
+                    url: 'postgresql://root:secret@localhost:5432/dev-db',
                 },
             },
         });
